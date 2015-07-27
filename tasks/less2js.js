@@ -51,13 +51,19 @@ module.exports = function (grunt) {
           ruleset.rules.forEach(function (rule) {
             if (rule.variable) {
               var name = rule.name.substr(1); // remove "@"
-              var value = rule.value.value[0]; // can be less.tree.Color, less.tree.Expression, etc.
-              lessVars[name] = value.toCSS();
+
+              if (rule.value.value.length > 1) {
+                lessVars[name] = rule.value.value.map(function(d) {
+                   return d.toCSS();
+                });
+              } else {
+                var value = rule.value.value[0]; // can be less.tree.Color, less.tree.Expression, etc.
+                lessVars[name] = value.toCSS();
+              }
             }
           });
         });
       });
-
       // process the data with current options
       if (options.ignoreWithPrefix) {
         _.forEach(lessVars, function (value, name) {
@@ -77,7 +83,7 @@ module.exports = function (grunt) {
       if (options.unwrapStrings) {
         var badStringInString = /^('|").*?\1$/;
         _.forEach(lessVars, function (value, name) {
-          if (value.match(badStringInString)) {
+          if (value.length <= 1 && value.match(badStringInString)) {
             lessVars[name] = value.replace(/^['"]|['"]$/g, '');
           }
         });
@@ -86,7 +92,7 @@ module.exports = function (grunt) {
       if (options.parseNumbers) {
         var isNumber = /^\d+$/;
         _.forEach(lessVars, function (value, name) {
-          if (value.match(isNumber)) {
+          if (value.length <= 1 && value.match(isNumber)) {
             lessVars[name] = parseInt(value, 10);
           }
         });
